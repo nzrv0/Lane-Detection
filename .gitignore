@@ -1,0 +1,96 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Virtual environment
+env/
+venv/
+ENV/
+.venv/
+.Python
+
+# VS Code settings
+.vscode/
+
+# PyCharm
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Data files
+*.csv
+*.tsv
+*.npz
+*.h5
+*.hdf5
+*.pkl
+*.joblib
+*.npy
+
+# Models
+*.pt
+*.pth
+*.ckpt
+*.pb
+*.onnx
+*.tflite
+
+# Logs and outputs
+*.log
+*.out
+*.err
+*.tmp
+*.cache
+*.tensorboard
+logs/
+runs/
+
+# TensorBoard
+events.out.tfevents.*
+
+# Checkpoints
+checkpoints/
+models/
+outputs/
+
+# DVC (Data Version Control)
+*.dvc
+.cache/
+.dvc/
+
+# Weights & Biases
+wandb/
+
+# HuggingFace
+*.lock
+*.jsonl
+*.model
+*.safetensors
+
+# MyPy, PyTest, coverage
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker
+*.pid
+*.sock
+
+# Jupyter kernel settings
+.ipython/
+
+# Colab
+*.ipynb~
+
+# Environment files (optional if private)
+.env
+.env.*
+
+
