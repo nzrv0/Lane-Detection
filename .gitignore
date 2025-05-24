@@ -1,99 +1,92 @@
-# Python bytecode
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
 
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints
-
-# weights
-weights/
-
-# Virtual environment
-env/
+# Virtual environments
 venv/
-ENV/
+env/
 .venv/
-.Python
+ENV/
+*.env
+*.venv
 
-# VS Code settings
-.vscode/
-
-# PyCharm
-.idea/
-
-# System files
-.DS_Store
-Thumbs.db
-
-# Data files
-*.csv
-*.tsv
-*.npz
-*.h5
-*.hdf5
-*.pkl
-*.joblib
-*.npy
-
-# Models
+# PyTorch model checkpoints
 *.pt
 *.pth
-*.ckpt
-*.pb
-*.onnx
-*.tflite
+checkpoints/
+models/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
 
 # Logs and outputs
 *.log
 *.out
 *.err
+*.csv
+*.tsv
+*.json
+*.h5
+*.ckpt
+*.onnx
+
+# Temporary files
 *.tmp
-*.cache
-*.tensorboard
-logs/
-runs/
+*.temp
+*.bak
 
-# TensorBoard
-events.out.tfevents.*
+# Datasets or large data files
+data/
+datasets/
+src/TUSimple/
+src/weights/
+*.zip
+*.tar
+*.gz
+*.npy
+*.npz
 
-# Checkpoints
-checkpoints/
-models/
-outputs/
+# OS files
+.DS_Store
+Thumbs.db
 
-# DVC (Data Version Control)
-*.dvc
-.cache/
-.dvc/
+# VSCode
+.vscode/
 
-# Weights & Biases
-wandb/
+# PyCharm
+.idea/
 
-# HuggingFace
-*.lock
-*.jsonl
-*.model
-*.safetensors
+# Spyder
+.spyderproject
+.spyproject
 
-# MyPy, PyTest, coverage
+# MyPy
 .mypy_cache/
-.pytest_cache/
+
+# PyTest
+.cache/
+
+# Coverage
 .coverage
 htmlcov/
+coverage.xml
 
-# Docker
-*.pid
-*.sock
+# TensorBoard
+runs/
 
-# Jupyter kernel settings
-.ipython/
+# Other experiment tracking (e.g., Weights & Biases)
+wandb/
+mlruns/
 
-# Colab
-*.ipynb~
-
-# Environment files (optional if private)
+# Environment configuration
 .env
 .env.*
 
+# Misc
+*.sqlite3
 

@@ -1,6 +1,5 @@
 import torch
-import torch.nn as nn
-from torch.functional import F
+from torch import nn
 
 
 class DoubleConv(nn.Module):
@@ -44,7 +43,46 @@ class Up(nn.Module):
         return x2
 
 
-class LaneNet(nn.Module):
+class UnetEncoder(nn.Module):
+    def __init__(self, in_chn):
+        super().__init__()
+        self.init = DoubleConv(in_chn, 64)
+        self.down1 = Down(64, 128)
+        self.down2 = Down(128, 256)
+        self.down3 = Down(256, 512)
+        self.down4 = Down(512, 1024)
+
+    def forward(self, x):
+        x1 = self.init(x)
+        x2 = self.down1(x1)
+        x3 = self.down2(x2)
+        x4 = self.down3(x3)
+        x5 = self.down4(x4)
+        return x1, x2, x3, x4, x5
+
+
+class UnetDecoder(nn.Module):
+    def __init__(self, out_chn):
+        super().__init__()
+        self.up1 = Up(1024, 512)
+        self.up2 = Up(512, 256)
+        self.up3 = Up(256, 128)
+        self.up4 = Up(128, 64)
+        self.out = DoubleConv(64, out_chn)
+
+    def forward(self, ch1, ch2, ch3, ch4, ch5):
+        x = self.up1(ch5, ch4)
+        x = self.up2(x, ch3)
+        x = self.up3(x, ch2)
+        x = self.up4(x, ch1)
+
+        out = self.out(x)
+
+        return out
+
+
+# Full architecture
+class Unet(nn.Module):
     def __init__(self, embed_dim=4):
         super().__init__()
         self.init = DoubleConv(3, 64)
@@ -75,9 +113,3 @@ class LaneNet(nn.Module):
         out = self.out(x)
 
         return out
-
-
-# from torchsummary import summary
-
-# model = LaneNet()
-# summary(model)
