@@ -53,7 +53,6 @@ if __name__ == "__main__":
             gt_labels = torch.tensor(gt_labels)
 
             gt_boxes = gt_boxes.squeeze(0)
-
             rpn, roi = model(image, gt_boxes, gt_labels)
 
             rpn_reg_loss, rpn_cls_loss = rpn["reg_loss"], rpn["cls_loss"]

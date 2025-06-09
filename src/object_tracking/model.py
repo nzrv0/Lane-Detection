@@ -1,7 +1,7 @@
 from rpn import RegionProposalNetwork
 from roi import ROI
 from feature_extractor import FeatureExtractor
-from anchor_boxes import generate_anchor_maps
+from anchor_boxes import generate_anchor_maps, boxes_to_original
 from helpers import get_device
 
 import torch
@@ -18,7 +18,7 @@ class FasterRcnn(nn.Module):
         # change this beacuse we need different classes each time
         self.roi = ROI(6)
 
-    def normalize(self, image, gt_boxes):
+    def normalize(self, image, gt_boxes=None):
         min_size = 600
         max_size = 1000
 
@@ -53,6 +53,8 @@ class FasterRcnn(nn.Module):
                 for s, s_orig in zip(image.shape[-2:], (h, w))
             ]
             ratio_height, ratio_width = ratios
+            gt_boxes = gt_boxes.unsqueeze(0)
+
             xmin, ymin, xmax, ymax = gt_boxes.unbind(1)
             xmin = xmin * ratio_width
             xmax = xmax * ratio_width
@@ -62,15 +64,22 @@ class FasterRcnn(nn.Module):
         return image, gt_boxes
 
     def forward(self, image, gt_boxes, gt_labels):
-        bef = gt_boxes
-        image, gt_boxes = self.normalize(image, gt_boxes)
+        old_shape = image.shape[-2:]
 
-        print(bef.shape == gt_boxes.shape)
+        if self.training:
+            image, gt_boxes = self.normalize(image, gt_boxes)
+        # else:
+        #     image, _ = self.normalize(image, None)
 
         features = self.feature_extractor(image)
         anchors = generate_anchor_maps(image, features)
+
         rpn = self.rpn(features, anchors, gt_boxes, image.shape)
+
         roi = self.roi(
             features, rpn["proposals"], image.shape[-2:], gt_boxes, gt_labels
         )
+        # if not self.training:
+        #     roi["boxes"] = boxes_to_original(roi["boxes"], image.shape[-2:], old_shape)
+
         return rpn, roi

@@ -29,7 +29,6 @@ class FocalLoss(nn.Module):
         ).to(self.device)
         loss = 0
         for i in range(self.n_class):
-            print(target_onehot[:, i, ...], ((target == 1) == True).any())
             target_onehot[:, i, ...][target == i] = 1
         for i in range(self.n_class):
             loss -= (
@@ -45,31 +44,6 @@ class FocalLoss(nn.Module):
             loss = torch.sum(loss)
 
         return loss
-
-
-# class FocalLoss(nn.Module):
-#     def __init__(self, alpha=0.25, gamma=2, reduction="mean"):
-#         super(FocalLoss, self).__init__()
-#         self.alpha = alpha
-#         self.gamma = gamma
-#         self.reduction = reduction
-
-#     def forward(self, inputs, targets):
-#         # Calculate Binary Cross-Entropy Loss for each sample
-#         BCE_loss = nn.functional.binary_cross_entropy_with_logits(
-#             inputs, targets, reduction="none"
-#         )
-
-#         pt = torch.exp(-BCE_loss)
-
-#         focal_loss = self.alpha * (1 - pt) ** self.gamma * BCE_loss
-#         # print(len(focal_loss[torch.isneginf(focal_loss)]))
-#         if self.reduction == "mean":
-#             return focal_loss.mean()
-#         elif self.reduction == "sum":
-#             return focal_loss.sum()
-#         else:
-#             return focal_loss
 
 
 class DiscriminativeLoss(_Loss):

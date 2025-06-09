@@ -37,7 +37,7 @@ def get_cords(lines, w, h, mode="binary"):
         lanes.append(list(zip(x, lines["y"])))
     point = []
     color = 255
-    for index, item in enumerate(lanes):
+    for index, item in enumerate(lanes[::-1]):
         for xy in item:
             if xy[0] != -2:
                 x = round(abs(int(xy[0]))) - 1

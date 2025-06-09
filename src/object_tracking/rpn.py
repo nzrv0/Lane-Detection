@@ -52,7 +52,6 @@ class RegionProposalNetwork(nn.Module):
         scores = torch.sigmoid(scores)
 
         # selecting only top 10_000 scores, original paper applies 6000
-        print(scores.shape)
         topk_values, topk_idx = torch.topk(scores, 6000)
         scores = scores[topk_idx]
         preds = preds[topk_idx]
@@ -170,7 +169,6 @@ class RegionProposalNetwork(nn.Module):
             # selecting all of the neg and pos instances
             sampled_idxs = torch.where(mask_neg_idx | mask_pos_idx)[0]
             # calculating localization loss, and binary cross entropy loss
-            print(box_pred_transform.shape, regression_targets.shape)
             localization_loss = smooth_l1_loss(
                 box_pred_transform[mask_pos_idx],
                 regression_targets[mask_pos_idx],

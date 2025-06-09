@@ -146,3 +146,19 @@ def boxes_to_targets(gt_boxes, anchors):
     )
 
     return regression_targets
+
+
+def boxes_to_original(boxes, new_size, original_size):
+    # boxes = boxes.unsqueeze(0)
+    ratios = [
+        torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
+        / torch.tensor(s, dtype=torch.float32, device=boxes.device)
+        for s, s_orig in zip(new_size, original_size)
+    ]
+    ratio_height, ratio_width = ratios
+    xmin, ymin, xmax, ymax = boxes.unbind(1)
+    xmin = xmin * ratio_width
+    xmax = xmax * ratio_width
+    ymin = ymin * ratio_height
+    ymax = ymax * ratio_height
+    return torch.stack((xmin, ymin, xmax, ymax), dim=1)

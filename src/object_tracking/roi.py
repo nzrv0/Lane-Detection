@@ -89,7 +89,7 @@ class ROI(nn.Module):
         for class_id in torch.unique(pred_labels):
             curr_indices = torch.where(pred_labels == class_id)[0]
             curr_keep_indices = nms(
-                pred_boxes[curr_indices], pred_scores[curr_indices], self.nms_threshold
+                pred_boxes[curr_indices], pred_scores[curr_indices], 0.3
             )
             keep_mask[curr_indices[curr_keep_indices]] = True
 
@@ -106,9 +106,9 @@ class ROI(nn.Module):
         return pred_boxes, pred_labels, pred_scores
 
     def forward(self, features, proposals, image_shape, gt_boxes, gt_labels):
-        if self.training:
+        proposals = proposals.to(dtype=torch.float32)
+        if self.training and gt_boxes is not None and gt_labels is not None:
             # concatign proposals with grouth truth boxes
-            proposals = proposals.to(dtype=torch.float32)
             proposals = torch.cat([proposals, gt_boxes], dim=0)
 
             labels, matched_boxes = self.assign_target_to_proposal(
@@ -124,56 +124,56 @@ class ROI(nn.Module):
             matched_boxes = matched_boxes[sampled_idxs]
             regression_targets = boxes_to_targets(matched_boxes, proposals)
 
-            # we need to set scale factro because of the downscale form image to feature map
-            # for vgg16 it would be 1/16 (0.0625)
-            possible_sacles = []
-            for s1, s2 in zip(features.shape[-2:], image_shape):
-                approx_scale = float(s1) / float(s2)
-                scale = 2 ** float(torch.tensor(approx_scale).log2().round())
-                possible_sacles.append(scale)
+        possible_sacles = []
+        # we need to set scale factro because of the downscale form image to feature map
+        # for vgg16 it would be 1/16 (0.0625)
+        for s1, s2 in zip(features.shape[-2:], image_shape):
+            approx_scale = float(s1) / float(s2)
+            scale = 2 ** float(torch.tensor(approx_scale).log2().round())
+            possible_sacles.append(scale)
 
-            proposal_roi_pool_feats = roi_pool(
-                features, [proposals], output_size=7, spatial_scale=possible_sacles[0]
-            ).flatten(start_dim=1)
+        proposal_roi_pool_feats = roi_pool(
+            features, [proposals], output_size=7, spatial_scale=possible_sacles[0]
+        ).flatten(start_dim=1)
 
-            fc = self.fully_connected_layer(proposal_roi_pool_feats)
+        fc = self.fully_connected_layer(proposal_roi_pool_feats)
 
-            cls_scores = self.classifier(fc)
-            box_transform_pred = self.regressor(fc)
+        cls_scores = self.classifier(fc)
+        box_transform_pred = self.regressor(fc)
 
-            # calculating loss
-            num_boxes, num_classes = cls_scores.shape
-            box_transform_pred = box_transform_pred.reshape(num_boxes, num_classes, 4)
+        # calculating loss
+        num_boxes, num_classes = cls_scores.shape
+        box_transform_pred = box_transform_pred.reshape(num_boxes, num_classes, 4)
 
-            output = {}
-            if self.training:
-                classification_loss = cross_entropy(cls_scores, labels)
+        output = {}
+        if self.training and gt_boxes is not None and gt_labels is not None:
+            classification_loss = cross_entropy(cls_scores, labels)
 
-                # Compute loss only for foreground
-                fg_propsal_idxs = torch.where(labels > 0)[0]
-                fg_cls_labels = labels[fg_propsal_idxs]
+            # Compute loss only for foreground
+            fg_propsal_idxs = torch.where(labels > 0)[0]
+            fg_cls_labels = labels[fg_propsal_idxs]
 
-                localizaiton_loss = (
-                    smooth_l1_loss(
-                        box_transform_pred[fg_propsal_idxs, fg_cls_labels],
-                        regression_targets[fg_propsal_idxs],
-                        beta=1 / 9,
-                        reduction="sum",
-                    )
-                    / labels.numel()
+            localizaiton_loss = (
+                smooth_l1_loss(
+                    box_transform_pred[fg_propsal_idxs, fg_cls_labels],
+                    regression_targets[fg_propsal_idxs],
+                    beta=1 / 9,
+                    reduction="sum",
                 )
+                / labels.numel()
+            )
 
-                output["classificaiton_loss"] = classification_loss
-                output["localizaiton_loss"] = localizaiton_loss
-
-                return output
+            output["classificaiton_loss"] = classification_loss
+            output["localizaiton_loss"] = localizaiton_loss
+        if self.training:
+            return output
         else:
             pred_boxes = generate_pred_boxes(box_transform_pred, proposals)
             pred_scores = softmax(cls_scores, dim=-1)
 
             # creating labels for each prediction
             pred_labels = torch.arange(num_classes, device=device)
-            pred_labels = pred_labels.view(-1, -1).expand_as(pred_scores)
+            pred_labels = pred_labels.view(1, -1).expand_as(pred_scores)
 
             # clamp boxes to boundry
             pred_boxes = clamp_boxes(pred_boxes, image_shape)

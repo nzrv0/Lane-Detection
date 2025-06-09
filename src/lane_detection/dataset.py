@@ -36,42 +36,58 @@ class LaneDataset(Dataset):
 
         cords = ["label_data_0313.json"]
         data = []
+
         for cord in cords:
             with open(self.image_dir / cord, "r") as fs:
                 dd = [item[:-1] for item in fs.readlines()]
                 parse = json.dumps(dd)
                 parse = json.loads(parse)
                 for item in parse:
-                    item = json.loads(item)
-                    data.append(
-                        {
-                            "image": self.image_dir / item["raw_file"],
-                            "lanes": {"x": item["lanes"], "y": item["h_samples"]},
-                        }
-                    )
+                    data_item = json.loads(item)
+                    if data_item["raw_file"].split("/")[-1] == "20.jpg":
+                        data.append(
+                            {
+                                "image": self.image_dir / data_item["raw_file"],
+                                "lanes": {
+                                    "x": data_item["lanes"],
+                                    "y": data_item["h_samples"],
+                                },
+                                "segments": self.image_dir
+                                / (
+                                    "seg_label/"
+                                    + "/".join(data_item["raw_file"].split("/")[1:])
+                                ),
+                            }
+                        )
         return data
 
     def load_data_spec(self, data):
         image = data["image"]
         lanes = data["lanes"]
+        segments = data["segments"]
 
+        print(data)
         # get images
         image = Image.open(image)
         width, height = image.size
         tensor_image = self.tfms(image).to(device)
 
         # load cords
-        seg_cords = get_cords(lanes, width, height, mode="segmentation")
-        seg_cords = seg_cords.squeeze()
-        seg_cords = Image.fromarray(seg_cords)
-        seg_cords = self.tf(seg_cords).to(device)
+        segments = Image.open(segments)
+        tensor_segments = self.tfms(segments).to(device)
 
-        bin_seg = get_cords(lanes, width, height)
-        bin_seg = bin_seg.squeeze()
-        bin_seg = Image.fromarray(bin_seg)
-        bin_seg = self.tf(bin_seg).to(device)
+        # load cords (old version)
+        # seg_cords = get_cords(lanes, width, height, mode="segmentation")
+        # seg_cords = seg_cords.squeeze()
+        # seg_cords = Image.fromarray(seg_cords)
+        # seg_cords = self.tf(seg_cords).to(device)
 
-        return tensor_image, bin_seg, seg_cords
+        # bin_seg = get_cords(lanes, width, height)
+        # bin_seg = bin_seg.squeeze()
+        # bin_seg = Image.fromarray(bin_seg)
+        # bin_seg = self.tf(bin_seg).to(device)
+
+        return tensor_image, tensor_segments
 
     def __len__(self):
         return len(self.dataset)

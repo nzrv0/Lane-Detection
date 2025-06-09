@@ -19,21 +19,11 @@ class ObjectDataset(Dataset):
         self.images = os.listdir(self.images_path)
         self.objects = os.listdir(self.object_path)
 
-        # self.tfms = T.Compose(
-        #     [
-        #         T.ToTensor(),
-        #         T.Resize((600, 1000)),
-        #         T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        #         T.RandomHorizontalFlip(),
-        #     ]
-        # )
-
     def __getitem__(self, index):
         # read image and transform
         image = self.images[index]
         image_path = self.images_path / image
-        image_res = Image.open(image_path)
-        # image_res = self.tfms(image_res).to(device)
+        image_res = Image.open(image_path).convert("RGB")
         image_res = T.ToTensor()(image_res)
 
         # read boxes and tranforms as tl, bl, tr, br
@@ -57,6 +47,7 @@ class ObjectDataset(Dataset):
             gt_labes.append(-1)
 
         box_cords = torch.stack(box_cords)
+
         return {
             "image": image_res,
             "cords": box_cords,
