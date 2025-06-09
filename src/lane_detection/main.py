@@ -13,7 +13,7 @@ device = get_device()
 
 def load_dataset():
     training = "TUSimple"
-    traning_data = DataLoader(LaneDataset(training), batch_size=3)
+    traning_data = DataLoader(LaneDataset(training), batch_size=1)
     return traning_data
 
 
@@ -28,7 +28,9 @@ def calc_loss(pred_segmentats, binary_segments, pred_embeding, instances):
     k_instance = 0.3
     k_dist = 1.0
 
-    segmentation_loss = FocalLoss()
+    segmentation_loss = BCEWithLogitsLoss(pos_weight=torch.tensor([0.75]))
+
+    # segmentation_loss = FocalLoss()
     binary_loss = segmentation_loss(pred_segmentats, binary_segments)
 
     embedding_loss = DiscriminativeLoss()
@@ -43,9 +45,25 @@ def calc_loss(pred_segmentats, binary_segments, pred_embeding, instances):
     return total_loss, binary_loss, instance_loss
 
 
+import sys
+
+
 def train_batch(image, bin_lines, seg_lines, model, optim):
     model.train()
     segmentation, pix_embeding = model(image)
+
+    # from helpers import show_image
+    # import numpy as np
+
+    # pix_embeding = pix_embeding.squeeze(0).permute(2, 1, 0).detach().cpu().numpy()
+    # segmentation = segmentation.squeeze(0).permute(1, 2, 0).detach().cpu().numpy()
+
+    # pix_embeding = np.hstack(pix_embeding)
+
+    # show_image(pix_embeding, "viridis")
+    # show_image(segmentation)
+
+    # sys.exit()
 
     optim.zero_grad()
 

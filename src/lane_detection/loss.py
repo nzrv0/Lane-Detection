@@ -8,67 +8,68 @@ import torch.nn.functional as F
 device = get_device()
 
 
-# class FocalLoss(nn.Module):
-#     def __init__(self, gamma=2, alpha=[0.5, 0.5], n_class=2, reduction="mean"):
-#         super().__init__()
-#         self.gamma = gamma
-#         self.alpha = alpha
-#         self.reduction = reduction
-#         self.n_class = n_class
-
-#     def forward(self, input, target):
-#         pt = F.softmax(input, dim=1)
-#         pt = pt.clamp(min=0.000001, max=0.999999)
-#         target_onehot = torch.zeros(
-#             (target.size(0), self.n_class, target.size(1), target.size(2))
-#         ).to(device)
-#         loss = 0
-#         for i in range(self.n_class):
-#             print(target_onehot[:, i], [target == i][i], target_onehot)
-#             target_onehot[:, i][[target == i][i]] = 1
-
-#         for i in range(self.n_class):
-#             loss -= (
-#                 self.alpha[i]
-#                 * (1 - pt[:, i]) ** self.gamma
-#                 * target_onehot[:, i]
-#                 * torch.log(pt[:, i])
-#             )
-
-#         if self.reduction == "mean":
-#             loss = torch.mean(loss)
-#         elif self.reduction == "sum":
-#             loss = torch.sum(loss)
-
-#         return loss
-
-
 class FocalLoss(nn.Module):
-    def __init__(self, alpha=0.25, gamma=2, reduction="mean"):
-        super(FocalLoss, self).__init__()
-        self.alpha = alpha  # controls class imbalance
-        self.gamma = gamma  # focuses on hard examples
+    """
+    Only consider two class now: foreground, background.
+    """
+
+    def __init__(self, gamma=2, alpha=[0.25, 0.75], n_class=2, reduction="mean"):
+        super().__init__()
+        self.gamma = gamma
+        self.alpha = alpha
         self.reduction = reduction
+        self.n_class = n_class
+        self.device = device
 
-    def forward(self, inputs, targets):
-        # Calculate Binary Cross-Entropy Loss for each sample
-        BCE_loss = nn.functional.binary_cross_entropy_with_logits(
-            inputs, targets, reduction="none"
-        )
+    def forward(self, input, target):
+        pt = F.softmax(input, dim=1)
+        pt = pt.clamp(min=0.000001, max=0.999999)
+        target_onehot = torch.zeros(
+            (target.size(0), self.n_class, target.size(1), target.size(2))
+        ).to(self.device)
+        loss = 0
+        for i in range(self.n_class):
+            print(target_onehot[:, i, ...], ((target == 1) == True).any())
+            target_onehot[:, i, ...][target == i] = 1
+        for i in range(self.n_class):
+            loss -= (
+                self.alpha[i]
+                * (1 - pt[:, i, ...]) ** self.gamma
+                * target_onehot[:, i, ...]
+                * torch.log(pt[:, i, ...])
+            )
 
-        # Compute pt (model confidence on true class)
-        pt = torch.exp(-BCE_loss)
-
-        # Apply the focal adjustment
-        focal_loss = self.alpha * (1 - pt) ** self.gamma * BCE_loss
-
-        # Apply reduction (mean, sum, or no reduction)
         if self.reduction == "mean":
-            return focal_loss.mean()
+            loss = torch.mean(loss)
         elif self.reduction == "sum":
-            return focal_loss.sum()
-        else:
-            return focal_loss
+            loss = torch.sum(loss)
+
+        return loss
+
+
+# class FocalLoss(nn.Module):
+#     def __init__(self, alpha=0.25, gamma=2, reduction="mean"):
+#         super(FocalLoss, self).__init__()
+#         self.alpha = alpha
+#         self.gamma = gamma
+#         self.reduction = reduction
+
+#     def forward(self, inputs, targets):
+#         # Calculate Binary Cross-Entropy Loss for each sample
+#         BCE_loss = nn.functional.binary_cross_entropy_with_logits(
+#             inputs, targets, reduction="none"
+#         )
+
+#         pt = torch.exp(-BCE_loss)
+
+#         focal_loss = self.alpha * (1 - pt) ** self.gamma * BCE_loss
+#         # print(len(focal_loss[torch.isneginf(focal_loss)]))
+#         if self.reduction == "mean":
+#             return focal_loss.mean()
+#         elif self.reduction == "sum":
+#             return focal_loss.sum()
+#         else:
+#             return focal_loss
 
 
 class DiscriminativeLoss(_Loss):

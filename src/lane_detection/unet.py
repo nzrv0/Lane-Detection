@@ -68,7 +68,8 @@ class UnetDecoder(nn.Module):
         self.up2 = Up(512, 256)
         self.up3 = Up(256, 128)
         self.up4 = Up(128, 64)
-        self.out = DoubleConv(64, out_chn)
+        self.out = nn.Conv2d(64, 2, 1)
+        # self.out = DoubleConv(64, out_chn)
 
     def forward(self, ch1, ch2, ch3, ch4, ch5):
         x = self.up1(ch5, ch4)
