@@ -20,6 +20,9 @@ ENV/
 *.pth
 checkpoints/
 models/
+training/
+videos/
+label_2/
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
