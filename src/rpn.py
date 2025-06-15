@@ -88,6 +88,7 @@ class RegionProposalNetwork(nn.Module):
         :param gt_boxes (Tensor shape (num of ground truth boxes (anchors) x 4))
         """
         iou_matrix = iou_calc(gt_boxes, anchors)
+
         # selecting top overlap values for each anchor
         best_match_iou, best_match_iou_idx = iou_matrix.max(dim=0)
 
@@ -155,6 +156,7 @@ class RegionProposalNetwork(nn.Module):
         )
 
         rpn_output = {"proposals": preds, "scores": scores}
+        
         if not self.training:
             return rpn_output
         else:

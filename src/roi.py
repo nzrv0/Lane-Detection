@@ -125,6 +125,7 @@ class ROI(nn.Module):
             regression_targets = boxes_to_targets(matched_boxes, proposals)
 
         possible_sacles = []
+        
         # we need to set scale factro because of the downscale form image to feature map
         # for vgg16 it would be 1/16 (0.0625)
         for s1, s2 in zip(features.shape[-2:], image_shape):

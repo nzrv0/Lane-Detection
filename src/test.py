@@ -44,7 +44,7 @@ gt_boxes = gt_boxes.squeeze(0)
 def visualise(image):
     image = image[None, :]
     rpn, roi = model(image, gt_boxes, gt_labels)
-
+    print(rpn)
     max_el = torch.sort(roi["scores"] * 100, dim=0, descending=False)[1][:5]
     drawn_boxes = draw_bounding_boxes(
         image.squeeze().detach().cpu(),

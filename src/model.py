@@ -15,7 +15,6 @@ class FasterRcnn(nn.Module):
         super().__init__()
         self.feature_extractor = FeatureExtractor()
         self.rpn = RegionProposalNetwork(512)
-        # change this beacuse we need different classes each time
         self.roi = ROI(4)
 
     def normalize(self, image, gt_boxes=None):
@@ -36,12 +35,10 @@ class FasterRcnn(nn.Module):
         scale = torch.min(
             float(min_size) / img_min_size, float(max_size) / img_max_size
         )
-        scale_factor = scale.item()
-
         image = torch.nn.functional.interpolate(
             image,
             size=None,
-            scale_factor=scale_factor,
+            scale_factor=scale.item(),
             mode="bilinear",
             recompute_scale_factor=True,
             align_corners=False,

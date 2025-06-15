@@ -149,7 +149,9 @@ def boxes_to_targets(gt_boxes, anchors):
 
 
 def boxes_to_original(boxes, new_size, original_size):
-    # boxes = boxes.unsqueeze(0)
+    """
+    Turning images and boxes from scaled form to original form
+    """
     ratios = [
         torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
         / torch.tensor(s, dtype=torch.float32, device=boxes.device)

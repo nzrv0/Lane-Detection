@@ -57,6 +57,3 @@ class ObjectDataset(Dataset):
 
     def __len__(self):
         return len(self.objects)
-
-
-ObjectDataset("training", "data_object_label_2")[0]
